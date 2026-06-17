@@ -2,11 +2,14 @@
 
 System Story Coverage is a simple way to answer one question:
 
-> Can every database field be explained by a real system flow?
+> Can every important database field be explained by a real system flow?
 
 Most systems have fields that nobody can confidently explain later. A field may
 exist because of an old screen, an old API, a one-time workaround, or a business
 rule that was never written down.
+
+It helps when designing a new system, rebuilding a legacy system, or reviewing
+changes with AI-assisted development.
 
 Here, "field" means one piece of stored data, such as a user's email, an account
 status, or the time a record was created. "Enum value" means one allowed state,
@@ -29,6 +32,8 @@ the idea can be shared safely without exposing any private product schema.
 If a new field is added to the database but no story explains it, the coverage
 report fails. That is the point: the schema and the product behavior stay in
 sync.
+
+The goal is not more documentation. The goal is living traceability.
 
 ## Small Example
 
@@ -285,10 +290,10 @@ System Story Coverage helps teams answer:
 - What breaks if we rename, remove, or change it?
 - Which business state does each enum value represent?
 
-It is useful before, during, and after development. On a new system it keeps the
-schema honest from day one, so it does not become the next legacy mess. On an old
-system it recovers the lost reasoning behind fields nobody remembers — and
-prevents teams from blindly copying old tables into the new design.
+On a new system it keeps the schema honest from day one, so it does not become
+the next legacy mess. On an old system it recovers the lost reasoning behind
+fields nobody remembers — and prevents teams from blindly copying old tables into
+the new design.
 
 The same field classification also helps security review: `actor_sets` shows the
 direct request-writable surface, while `app_sets` and `db_sets` show fields that
