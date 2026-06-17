@@ -1,7 +1,9 @@
 # P1-F01 — Create Workspace
 
-A platform sign-up creates a workspace tenant and its initial owner account. The owner
-account starts as `invited`; first login and password setup are handled by a separate flow.
+A platform sign-up creates a workspace tenant and its initial owner account. The actor
+supplies both the workspace display name and the URL slug — the slug is chosen by the
+user, not auto-generated from the name. The owner account starts as `invited`; first
+login and password setup are handled by a separate flow.
 
 ```json system-story
 {

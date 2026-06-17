@@ -1,7 +1,9 @@
 # P2-F04 — Suspend Workspace
 
 A system process suspends a workspace, for example because the billing or compliance state
-requires temporary lockout.
+requires temporary lockout. Workspace suspension is recorded with `audit_action.suspend`,
+which is distinct from `audit_action.disable` used when a user account is disabled. Keeping
+them separate makes audit queries unambiguous.
 
 ```json system-story
 {
@@ -18,7 +20,7 @@ requires temporary lockout.
     "E.audit_actor_type.system",
     "T.audit_event.actor_id",
     "T.audit_event.action",
-    "E.audit_action.disable",
+    "E.audit_action.suspend",
     "T.audit_event.object_type",
     "E.audit_object_type.workspace",
     "T.audit_event.object_id",

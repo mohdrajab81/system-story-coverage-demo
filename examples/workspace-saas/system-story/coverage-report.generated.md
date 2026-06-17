@@ -4,8 +4,8 @@
 
 - Registry generated at: `not recorded (deterministic output)`
 - Flow files scanned: `7`
-- Coverage-required IDs: `58`
-- Covered IDs: `58`
+- Coverage-required IDs: `59`
+- Covered IDs: `59`
 - Deferred IDs: `0`
 - Uncovered IDs: `0`
 - Unknown IDs: `0`
@@ -49,9 +49,10 @@ None.
 - `E.account_status.active`: P1-F03
 - `E.account_status.disabled`: P2-F02
 - `E.audit_action.create`: P1-F01, P1-F02, P2-F01
-- `E.audit_action.disable`: P2-F02, P2-F04
+- `E.audit_action.disable`: P2-F02
 - `E.audit_action.login`: P1-F03
 - `E.audit_action.revoke`: P2-F03
+- `E.audit_action.suspend`: P2-F04
 - `E.audit_actor_type.system`: P1-F01, P2-F04
 - `E.audit_actor_type.user`: P1-F02, P1-F03, P2-F01, P2-F02, P2-F03
 - `E.audit_object_type.session`: P2-F03
