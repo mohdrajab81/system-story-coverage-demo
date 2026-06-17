@@ -7,6 +7,19 @@ The purpose is simple:
 
 > Every important field should have a reason to exist.
 
+It is useful **before, during, and after** development — not only when rebuilding
+a legacy system.
+
+- **Before and during a new build**, it stops the schema from growing by
+  accident. Every new field must earn its place from day one, so the new system
+  does not quietly become the next legacy mess.
+- **After the fact, on an existing system**, it recovers the lost "why" behind
+  fields nobody can confidently explain anymore.
+
+The strongest use is the new-build case, because the cheapest time to explain a
+field is the moment it is created — not two years later when the person who added
+it has gone.
+
 ## Core Idea
 
 First, generate a stable registry from the real database schema.
@@ -96,6 +109,60 @@ This makes it easier to ask focused questions such as:
 - "Which OpenAPI endpoint should expose these fields?"
 - "Which tests should be updated?"
 - "Is this new column justified by any story?"
+
+## Benefits You Might Not Expect
+
+The five categories were designed to answer "who sets this field?" But the same
+classification turns out to be useful for several things the technique was not
+originally built for.
+
+### A built-in security map
+
+`actor_sets` is more than "fields the user enters." It is the complete list of
+every field that untrusted input can influence, across the whole system, in one
+place. That is an attack-surface map you normally have to build by hand.
+
+This makes two security questions easy to answer:
+
+- **What can an attacker reach?** Read every `actor_sets` entry.
+- **Which fields must never be settable from a request body?** Anything in
+  `db_sets` or `app_sets`. A request that lets a client write one of those is a
+  mass-assignment bug. The registry tells you exactly which fields to lock down.
+
+For systems that hold sensitive or regulated data, this is a real safety benefit,
+not a side effect.
+
+### A privacy and compliance trace
+
+The registry already records where every field is set and where it is read. Mark
+which fields hold personal data and you have a trace of exactly which flows touch
+it — which is what data-retention, consent, and right-to-be-forgotten work all
+need. The coverage report becomes evidence that you know where sensitive data
+flows, instead of a promise that you do.
+
+### Dead-field detection
+
+A field that appears in `db_sets` but never in any `reads` is written but never
+consumed — stored data that no flow uses. The classification surfaces this
+write-only dead weight so it can be removed instead of carried forever.
+
+### A shared language for product and engineering
+
+Flow files describe business journeys, not SQL. A non-technical product owner can
+read one and confirm that the engineering understanding matches the business
+intent. Very few artifacts are readable and verifiable by both sides at once.
+
+### Durable institutional memory
+
+When the person who designed the schema leaves, the reasoning usually leaves with
+them. Story files keep the "why" in the repository, so the next engineer — or the
+next AI session — does not have to reverse-engineer intent from column names.
+
+> Note: the security map, the privacy trace, and dead-field detection are
+> capabilities the classification makes possible. The demo tool in this repo
+> checks coverage, unknown references, and invalid category claims; the other
+> uses build on the same registry but are applied by the team, not automated
+> here.
 
 ## Practical Workflow
 
