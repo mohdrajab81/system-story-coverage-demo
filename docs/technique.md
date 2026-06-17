@@ -118,16 +118,21 @@ originally built for.
 
 ### A built-in security map
 
-`actor_sets` is more than "fields the user enters." It is the complete list of
-every field that untrusted input can influence, across the whole system, in one
-place. That is an attack-surface map you normally have to build by hand.
+`actor_sets` is more than "fields the user enters." It is the list of fields a
+request can directly provide. That direct request-writable surface is an
+attack-surface map you normally have to build by hand.
 
 This makes two security questions easy to answer:
 
-- **What can an attacker reach?** Read every `actor_sets` entry.
-- **Which fields must never be settable from a request body?** Anything in
-  `db_sets` or `app_sets`. A request that lets a client write one of those is a
-  mass-assignment bug. The registry tells you exactly which fields to lock down.
+- **What can a request directly write?** Read every `actor_sets` entry.
+- **Which fields must never be directly settable from a request body?** Anything
+  in `db_sets` or `app_sets`. A request that lets a client directly write one of
+  those is usually a mass-assignment bug.
+
+Some `app_sets` values may still be indirectly influenced by user input. For
+example, the backend may derive a normalized slug from a user-entered name. The
+registry does not remove the need for threat modeling, but it makes field
+ownership and direct write boundaries visible.
 
 For systems that hold sensitive or regulated data, this is a real safety benefit,
 not a side effect.

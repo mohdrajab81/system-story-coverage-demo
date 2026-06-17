@@ -290,10 +290,10 @@ schema honest from day one, so it does not become the next legacy mess. On an ol
 system it recovers the lost reasoning behind fields nobody remembers — and
 prevents teams from blindly copying old tables into the new design.
 
-The same field classification also doubles as a security map: the fields a user
-can set (`actor_sets`) are exactly your untrusted-input attack surface, and the
-fields only the system sets (`app_sets`, `db_sets`) are the ones an API must keep
-read-only.
+The same field classification also helps security review: `actor_sets` shows the
+direct request-writable surface, while `app_sets` and `db_sets` show fields that
+clients must not directly write. Derived application fields may still be
+influenced by user input, but the registry makes that ownership visible.
 
 ## Why It Helps AI Work
 
