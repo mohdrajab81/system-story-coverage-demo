@@ -231,7 +231,10 @@ by at least one story file.
 
 ## How A Story Classifies Fields
 
-Each flow file contains a small machine-readable block.
+Each flow file contains a small machine-readable block. The block uses the
+`json system-story` info string. GitHub does not apply syntax highlighting to
+this block because the info string is not a standard language tag, but the
+content is valid JSON and is machine-readable by the coverage tool.
 
 ```json system-story
 {
