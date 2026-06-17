@@ -1,6 +1,10 @@
 # System Story Coverage Demo
 
-System Story Coverage is a simple way to answer one question:
+System Story Coverage is a database field usage contract: a way to connect every
+important database field to the real business flow that creates it, reads it,
+changes it, or depends on it.
+
+It answers one question:
 
 > Can every important database field be explained by a real system flow?
 
@@ -13,10 +17,8 @@ changes with AI-assisted development.
 
 Here, "field" means one piece of stored data, such as a user's email, an account
 status, or the time a record was created. "Enum value" means one allowed state,
-such as `active`, `disabled`, or `admin`.
-
-This technique makes every important field and enum value traceable to the flow
-that creates it, reads it, changes it, or depends on it.
+such as `active`, `disabled`, or `admin`. The contract covers enum values too,
+not only columns.
 
 This repository is a small public demo. It uses a fake SaaS workspace system so
 the idea can be shared safely without exposing any private product schema.

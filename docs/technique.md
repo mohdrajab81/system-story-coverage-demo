@@ -1,7 +1,7 @@
 # System Story Coverage
 
-System Story Coverage is a flow-based way to connect a database schema to real
-product behavior.
+System Story Coverage is a database field usage contract: a flow-based way to
+connect a database schema to real product behavior.
 
 The purpose is simple:
 
