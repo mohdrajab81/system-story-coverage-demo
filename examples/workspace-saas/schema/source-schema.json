@@ -1,0 +1,95 @@
+{
+  "project": "workspace-saas",
+  "description": "Synthetic schema used to demonstrate System Story Coverage.",
+  "enums": [
+    {
+      "name": "workspace_status",
+      "values": ["active", "suspended"]
+    },
+    {
+      "name": "user_role",
+      "values": ["owner", "admin", "member"]
+    },
+    {
+      "name": "account_status",
+      "values": ["invited", "active", "disabled"]
+    },
+    {
+      "name": "session_status",
+      "values": ["active", "revoked"]
+    },
+    {
+      "name": "audit_action",
+      "values": ["create", "login", "disable", "revoke"]
+    },
+    {
+      "name": "audit_actor_type",
+      "values": ["system", "user"]
+    },
+    {
+      "name": "audit_object_type",
+      "values": ["workspace", "user_account", "session"]
+    }
+  ],
+  "tables": [
+    {
+      "name": "workspace",
+      "columns": [
+        {"name": "id", "type": "uuid", "nullable": false, "default": "uuidv7()"},
+        {"name": "name", "type": "text", "nullable": false},
+        {"name": "slug", "type": "text", "nullable": false},
+        {"name": "status", "type": "workspace_status", "nullable": false, "default": "'active'"},
+        {"name": "created_at", "type": "timestamptz", "nullable": false, "default": "now()"},
+        {"name": "updated_at", "type": "timestamptz", "nullable": false, "default": "now()", "trigger_written": "touch_updated_at()"}
+      ]
+    },
+    {
+      "name": "user_account",
+      "columns": [
+        {"name": "id", "type": "uuid", "nullable": false, "default": "uuidv7()"},
+        {"name": "workspace_id", "type": "uuid", "nullable": false},
+        {"name": "email", "type": "text", "nullable": false},
+        {"name": "full_name", "type": "text", "nullable": false},
+        {"name": "role", "type": "user_role", "nullable": false},
+        {"name": "status", "type": "account_status", "nullable": false, "default": "'invited'"},
+        {"name": "password_hash", "type": "text", "nullable": true},
+        {"name": "password_changed_at", "type": "timestamptz", "nullable": true},
+        {"name": "last_login_at", "type": "timestamptz", "nullable": true},
+        {"name": "created_at", "type": "timestamptz", "nullable": false, "default": "now()"},
+        {"name": "updated_at", "type": "timestamptz", "nullable": false, "default": "now()", "trigger_written": "touch_updated_at()"}
+      ]
+    },
+    {
+      "name": "session",
+      "columns": [
+        {"name": "id", "type": "uuid", "nullable": false, "default": "uuidv7()"},
+        {"name": "workspace_id", "type": "uuid", "nullable": false},
+        {"name": "user_account_id", "type": "uuid", "nullable": false},
+        {"name": "status", "type": "session_status", "nullable": false, "default": "'active'"},
+        {"name": "access_token_hash", "type": "text", "nullable": false},
+        {"name": "refresh_token_hash", "type": "text", "nullable": false},
+        {"name": "issued_at", "type": "timestamptz", "nullable": false, "default": "now()"},
+        {"name": "expires_at", "type": "timestamptz", "nullable": false},
+        {"name": "refresh_expires_at", "type": "timestamptz", "nullable": false},
+        {"name": "revoked_at", "type": "timestamptz", "nullable": true},
+        {"name": "created_at", "type": "timestamptz", "nullable": false, "default": "now()"},
+        {"name": "updated_at", "type": "timestamptz", "nullable": false, "default": "now()", "trigger_written": "touch_updated_at()"}
+      ]
+    },
+    {
+      "name": "audit_event",
+      "columns": [
+        {"name": "id", "type": "uuid", "nullable": false, "default": "uuidv7()"},
+        {"name": "workspace_id", "type": "uuid", "nullable": true},
+        {"name": "actor_type", "type": "audit_actor_type", "nullable": false},
+        {"name": "actor_id", "type": "uuid", "nullable": true},
+        {"name": "action", "type": "audit_action", "nullable": false},
+        {"name": "object_type", "type": "audit_object_type", "nullable": false},
+        {"name": "object_id", "type": "uuid", "nullable": false},
+        {"name": "summary", "type": "text", "nullable": false},
+        {"name": "correlation_id", "type": "uuid", "nullable": false},
+        {"name": "occurred_at", "type": "timestamptz", "nullable": false, "default": "now()"}
+      ]
+    }
+  ]
+}
