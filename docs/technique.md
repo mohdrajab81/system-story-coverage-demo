@@ -1,78 +1,138 @@
 # System Story Coverage
 
-System Story Coverage is a flow-based technique for validating a schema against
-real product behavior.
+System Story Coverage is a flow-based way to connect a database schema to real
+product behavior.
+
+The purpose is simple:
+
+> Every important field should have a reason to exist.
 
 ## Core Idea
 
-Create a stable registry of every coverage-relevant schema item:
+First, generate a stable registry from the real database schema.
 
-- table columns: `T.workspace.name`
-- generated/computed columns: `T.trip.~duration_seconds` (the `~` prefix marks columns the database computes — flow stories cannot claim them in `actor_sets` or `app_sets`)
-- enum values: `E.user_role.admin`
-- view columns, if applicable: `V.report.active_user_count`
+Example IDs:
 
-Then write one small system story per business flow. Each story classifies the
-fields and enum values it touches:
+- `T.workspace.name`: a table column.
+- `E.user_role.admin`: an enum value.
+- `T.trip.~duration_seconds`: a database-generated column. The `~` marks a
+  value computed by the database.
+- `V.report.active_user_count`: a view column, if the project chooses to cover
+  views.
 
-- `actor_sets`: supplied by the human or client request
-- `app_sets`: explicitly written or derived by application or service logic
-- `db_sets`: produced by database defaults, generated columns, or triggers
-- `reads`: checked or used but not changed
-- `deferred`: intentionally in scope but not covered yet
+Then write one small story per business flow.
 
-## Why Both Column and Enum Value?
+Each story classifies the fields and enum values it touches:
 
-A column token (`T.workspace.status`) tells you which field changes.
-An enum value token (`E.workspace_status.suspended`) tells you which state the
-flow transitions to.
+- `actor_sets`: supplied by the user or client request.
+- `app_sets`: written or derived by application code.
+- `db_sets`: created by database defaults, generated columns, or triggers.
+- `reads`: checked or used but not changed.
+- `deferred`: intentionally in scope but not covered yet.
 
-Together they give you: "this flow sets workspace.status to suspended." Without
-the enum token, you only know the field was written — not what value it received
-or which business state it represents. This is what makes the registry a product
-accountability map rather than just a field list. It lets you trace which flows
-produce each state, and which tests need to protect each transition.
+## Why Both Column And Enum Value?
+
+A column token says which field is involved:
+
+```text
+T.workspace.status
+```
+
+An enum token says which state is involved:
+
+```text
+E.workspace_status.suspended
+```
+
+Together they say:
+
+```text
+This flow sets workspace.status to suspended.
+```
+
+Without the enum value, you only know that the field changed. You do not know
+which business state the flow produced.
+
+This is why the technique is more useful than a normal field list. It shows the
+business meaning of the data.
 
 ## Why This Helps
 
-For every field you can answer:
+For every field, the team can ask:
 
 - Why does it exist?
-- Who owns the value?
+- Who owns it?
+- Who can change it?
 - When does it change?
 - Which user journey depends on it?
 - Which API contract should expose it?
 - Which tests should cover it?
+- Which screens or workers may be affected by a future change?
+
+## Why It Helps AI-Assisted Work
+
+AI assistants work better when the context is small, specific, and structured.
+
+System Story Coverage creates that context.
+
+Instead of loading a whole repository into an AI conversation, you can provide:
+
+- the generated schema registry,
+- the generated coverage report,
+- and the few story files related to the change.
+
+That can reduce token usage and reduce confusion. It also gives the AI a clear
+map of ownership:
+
+- user-provided values,
+- backend-derived values,
+- database-generated values,
+- read-only dependencies,
+- and intentionally deferred items.
+
+This makes it easier to ask focused questions such as:
+
+- "Which fields are affected if we change this flow?"
+- "Which OpenAPI endpoint should expose these fields?"
+- "Which tests should be updated?"
+- "Is this new column justified by any story?"
 
 ## Practical Workflow
 
-1. Generate a schema registry from live SQL migrations via pg_catalog.
-2. Write flows one by one.
-3. Run the coverage report in strict mode.
-4. Investigate uncovered IDs.
-5. Treat unknown IDs or invalid category claims as design errors — fix the story or fix the schema.
-6. Use the stories to drive OpenAPI design, UI journeys, and test cases.
-7. Re-run coverage after every schema migration.
+1. Write or update SQL migrations.
+2. Apply the migrations to a disposable PostgreSQL database.
+3. Introspect PostgreSQL using `pg_catalog`.
+4. Generate the schema registry.
+5. Write or update one story file per flow.
+6. Run the coverage report in strict mode.
+7. Investigate uncovered IDs.
+8. Treat unknown IDs or invalid category claims as design errors.
+9. Use the stories to guide OpenAPI, UI journeys, tests, and authorization.
+10. Re-run the same checks in CI.
 
 ## What This Is Not
 
 System Story Coverage is not a replacement for:
 
-- BDD scenarios
-- user stories
-- event storming
-- database migrations
-- OpenAPI specifications
-- automated tests
+- BDD scenarios,
+- user stories,
+- event storming,
+- database migrations,
+- OpenAPI specifications,
+- automated tests.
 
 It is a traceability layer that connects them.
 
 ## Schema Source
 
-In production, always generate the registry from live contracts — SQL migrations
-applied to a real PostgreSQL instance and introspected through `pg_catalog`. This
-guarantees the registry reflects exactly what the database engine sees, including
-computed defaults, trigger-written columns, and generated expressions.
+In production, generate the registry from live contracts.
 
-Avoid hand-maintaining the registry. A hand-maintained file drifts from the real
-schema within days. The registry should be a CI artifact, not a document.
+For this demo, that means:
+
+1. Apply SQL migrations to a real PostgreSQL instance.
+2. Ask PostgreSQL what schema it created.
+3. Generate the registry from that answer.
+
+This is stronger than hand-maintaining a registry file because hand-maintained
+documents drift quickly. The registry should be generated by scripts and checked
+in CI.
