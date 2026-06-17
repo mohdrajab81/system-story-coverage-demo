@@ -43,6 +43,10 @@ Each story classifies the fields and enum values it touches:
 - `reads`: checked or used but not changed.
 - `deferred`: intentionally in scope but not covered yet.
 
+The coverage report compares the generated registry with the story files. If the
+schema contains an important field that no story explains, the report exposes the
+gap.
+
 ## Why Both Column And Enum Value?
 
 A column token says which field is involved:
@@ -67,7 +71,7 @@ Without the enum value, you only know that the field changed. You do not know
 which business state the flow produced.
 
 This is why the technique is more useful than a normal field list. It shows the
-business meaning of the data.
+business meaning of the data, not only the shape of the database.
 
 ## Why This Helps
 
@@ -80,7 +84,9 @@ For every field, the team can ask:
 - Which user journey depends on it?
 - Which API contract should expose it?
 - Which tests should cover it?
-- Which screens or workers may be affected by a future change?
+- Which screens, workers, or integrations may be affected by a future change?
+
+This makes the schema easier to design, review, test, document, and change.
 
 ## Why It Helps AI-Assisted Work
 
@@ -108,7 +114,11 @@ This makes it easier to ask focused questions such as:
 - "Which fields are affected if we change this flow?"
 - "Which OpenAPI endpoint should expose these fields?"
 - "Which tests should be updated?"
+- "Which authorization rules are involved?"
 - "Is this new column justified by any story?"
+
+The technique does not make AI automatically correct, but it gives AI a cleaner
+system map and makes its assumptions easier to review.
 
 ## Benefits You Might Not Expect
 
@@ -127,12 +137,15 @@ This makes two security questions easy to answer:
 - **What can a request directly write?** Read every `actor_sets` entry.
 - **Which fields must never be directly settable from a request body?** Anything
   in `db_sets` or `app_sets`. A request that lets a client directly write one of
-  those is usually a mass-assignment bug.
+  those is usually a mass-assignment bug or an authorization design error.
 
 Some `app_sets` values may still be indirectly influenced by user input. For
-example, the backend may derive a normalized slug from a user-entered name. The
-registry does not remove the need for threat modeling, but it makes field
-ownership and direct write boundaries visible.
+example, the backend may derive a normalized slug from a user-entered name, or a
+request may carry a command that leads the backend to update a protected field.
+The point is that such values are validated and mapped by backend logic, not
+bound directly from the request body to protected columns. The registry does not
+remove the need for threat modeling, but it makes field ownership and direct
+write boundaries visible.
 
 For systems that hold sensitive or regulated data, this is a real safety benefit,
 not a side effect.
@@ -147,9 +160,17 @@ flows, instead of a promise that you do.
 
 ### Dead-field detection
 
-A field that appears in `db_sets` but never in any `reads` is written but never
-consumed — stored data that no flow uses. The classification surfaces this
-write-only dead weight so it can be removed instead of carried forever.
+A field that appears in `db_sets` or `app_sets` but never appears in `reads` is a
+candidate write-only field.
+
+That does not automatically mean the field is wrong. It may exist for audit,
+reporting, external integration, future use, or operational diagnostics. But the
+classification surfaces the question clearly:
+
+> We write this value. Which flow actually consumes it?
+
+That question is hard to ask when the schema is disconnected from product
+behavior.
 
 ### A shared language for product and engineering
 
@@ -171,16 +192,26 @@ next AI session — does not have to reverse-engineer intent from column names.
 
 ## Practical Workflow
 
-1. Write or update SQL migrations.
-2. Apply the migrations to a disposable PostgreSQL database.
-3. Introspect PostgreSQL using `pg_catalog`.
-4. Generate the schema registry.
-5. Write or update one story file per flow.
-6. Run the coverage report in strict mode.
-7. Investigate uncovered IDs.
-8. Treat unknown IDs or invalid category claims as design errors.
-9. Use the stories to guide OpenAPI, UI journeys, tests, and authorization.
-10. Re-run the same checks in CI.
+For a new system, start from the business flow, not from the database table.
+
+1. Draft or update the system story for the business flow.
+2. Identify the fields and enum states the flow needs.
+3. Write or update SQL migrations.
+4. Apply the migrations to a disposable PostgreSQL database.
+5. Introspect PostgreSQL using `pg_catalog`.
+6. Generate the schema registry.
+7. Align the story IDs with the generated registry.
+8. Run the coverage report in strict mode.
+9. Investigate uncovered IDs.
+10. Treat unknown IDs or invalid category claims as design errors.
+11. Use the stories to guide OpenAPI, UI journeys, tests, authorization, and
+    AI-assisted changes.
+12. Re-run the same checks in CI.
+
+For an existing or legacy system, the order is reversed. First generate the
+registry from the current schema, then write stories to recover the lost
+reasoning. There, uncovered IDs are not only technical gaps — they are business
+questions waiting to be answered.
 
 ## What This Is Not
 
@@ -191,7 +222,9 @@ System Story Coverage is not a replacement for:
 - event storming,
 - database migrations,
 - OpenAPI specifications,
-- automated tests.
+- automated tests,
+- authorization rules,
+- threat modeling.
 
 It is a traceability layer that connects them.
 
@@ -208,3 +241,10 @@ For this demo, that means:
 This is stronger than hand-maintaining a registry file because hand-maintained
 documents drift quickly. The registry should be generated by scripts and checked
 in CI.
+
+The important rule is:
+
+> Do not let the registry become another manual document.
+
+The registry should come from the database contract. The stories should explain
+the product behavior. The coverage report keeps the two connected.
